@@ -9,6 +9,12 @@ import cv2
 
 VideoSource = 0 # Video source
 
+# construct the argument parser and parse the arguments
+ap = argparse.ArgumentParser()
+ap.add_argument("-v", "--video", help="path to the video file")
+ap.add_argument("-a", "--min-area", type=int, default=500, help="minimum area size")
+args = vars(ap.parse_args())
+
 # Read from webcam
 vs = VideoStream(src=VideoSource).start()
 time.sleep(2.0)
