@@ -1,4 +1,4 @@
-#!/usr/bin/python3.6
+#!/usr/bin/python3.7
 # import the necessary packages
 from imutils.video import VideoStream
 import argparse
@@ -6,13 +6,35 @@ import datetime
 import imutils
 import time
 import cv2
+#import Adafruit IO REST client.
+from Adafruit_IO import Client, Feed, RequestError
 
-VideoSource = 0 # Video source
+i = 0
 
-# construct the argument parser and parse the arguments
+# Set to your Adafruit IO key.
+# Remember, your key is a secret,
+# so make sure not to publish it when you publish this code!
+ADAFRUIT_IO_KEY = 'aio_IHir43lNkCvWncShzIbKifb7nebk'
+
+# Set to your Adafruit IO username.
+# (go to https://accounts.adafruit.com to find your username)
+ADAFRUIT_IO_USERNAME = 'torres_santiago'
+
+# Create an instance of the REST client.
+aio = Client(ADAFRUIT_IO_USERNAME, ADAFRUIT_IO_KEY)
+
+try: # if we have a 'digital' feed
+    digital = aio.feeds('digital')
+except RequestError: # create a digital feed
+    feed = Feed(name="digital")
+    digital = aio.create_feed(feed)
+
+VideoSource = -1 # Video source
+
+# Construct the argument parser and parse the arguments
 ap = argparse.ArgumentParser()
 ap.add_argument("-v", "--video", help="path to the video file")
-ap.add_argument("-a", "--min-area", type=int, default=500, help="minimum area size")
+ap.add_argument("-a", "--min-area", type=int, default=120, help="minimum area size")
 args = vars(ap.parse_args())
 
 # Read from webcam
@@ -27,10 +49,6 @@ while True:
     frame = vs.read()
     text = 0 # Unoccupied
     
-    # if the frame could not be grabbed, then we have reached the end
-    # of the video
-    if frame is None:
-        break
     # resize the frame, convert it to grayscale, and blur it
     frame = imutils.resize(frame, width=500)
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -57,10 +75,15 @@ while True:
         text = 1 #Occupied
     
     # Para uso nuestro ;)
-    if text == 0:
-        print("Unoccupied")
-    else:
-        print("Occupied")
+    # if text == 0:
+        # print("Unoccupied")
+    # else:
+        # print("Occupied")
+    # Por temas de licencia toca cada cierto tiempo
+    if (i%100) == 0:
+        aio.send("digital", text)
+        #print(text)
+    i = i + 1
 # cleanup the camera
 vs.release()
 vs.stop()
